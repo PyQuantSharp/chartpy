@@ -2349,9 +2349,9 @@ class EnginePlotly(EngineTemplate):
             py_offline.plot(fig, filename=style.html_file_output,
                             auto_open=not (style.silent_display))
         elif style.plotly_plot_mode == 'offline_html_exc_embed_js':
-            py_offline.plot(fig, filename=style.html_file_output,
-                            include_plotlyjs="cdn",
-                            auto_open=not(style.silent_display))
+            fig.write_html(style.html_file_output,
+                           include_plotlyjs="cdn",
+                           auto_open=not(style.silent_display))
         elif style.plotly_plot_mode == 'offline_png':
             # Needs orca
             fig.write_image(style.file_output)
@@ -2363,6 +2363,10 @@ class EnginePlotly(EngineTemplate):
         elif style.plotly_plot_mode == 'offline_div':
             return py_offline.plot(fig, include_plotlyjs=False,
                                    output_type='div')  # HTML string
+
+        elif style.plotly_plot_mode == 'offline_div_cdn':
+            return fig.to_html(full_html=False,
+                               include_plotlyjs='cdn')  # HTML div with CDN script
 
         elif style.plotly_plot_mode == 'offline_image_png_bytes':
             return plotly.io.to_image(fig, format='png')  # PNG as bytes

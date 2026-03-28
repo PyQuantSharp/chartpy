@@ -78,9 +78,9 @@ class CanvasPlotterTemplate(ABC):
         else:
             html_filename = output_filename
 
-        from bs4 import BeautifulSoup
-        soup = BeautifulSoup(html, 'html.parser')
-        html = soup.prettify()
+        # Skip BeautifulSoup prettify — it's very slow on large HTML
+        # and only reformats whitespace for readability
+        pass
 
         if not(return_html_binary):
             html_file = open(html_filename, "w")
@@ -143,6 +143,7 @@ class CanvasPlotterPlain(CanvasPlotterTemplate):
         html = []
         html.append('<head><title>' + page_title + '</title>')
         html.append(plain_css)
+        html.append('<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>')
         html.append(extra_head_code)
         html.append('</head>')
 
@@ -180,35 +181,30 @@ class CanvasPlotterPlain(CanvasPlotterTemplate):
                             chart.style.silent_display = True
                             chart.style.thin_margin = True
 
-                            chart.plot()
+                            fig = chart.plot()
 
                             chart.style.thin_margin = old_margin
                             chart.style.silent_display = old_silent_display
 
-                            # grab file name
-                            if chart.engine == 'matplotlib':
-                                # if (chart.style.file_output is None):
-                                #     import time
-                                #     chart.style.file_output = str(time.time()) + "matplotlib.png"
-
-                                source_file = chart.style.file_output
+                            # If plot returned an HTML div string (inline mode),
+                            # embed directly instead of using an iframe
+                            if isinstance(fig, str) and '<div' in fig:
+                                html.append(fig)
                             else:
-                                source_file = chart.style.html_file_output
+                                # grab file name
+                                if chart.engine == 'matplotlib':
+                                    source_file = chart.style.file_output
+                                else:
+                                    source_file = chart.style.html_file_output
 
-                            try:
-                                width = chart.style.width * abs(chart.style.scale_factor) + padding
-                                height = chart.style.height * abs(chart.style.scale_factor) + padding
+                                try:
+                                    width = chart.style.width * abs(chart.style.scale_factor) + padding
+                                    height = chart.style.height * abs(chart.style.scale_factor) + padding
 
-                                # html.append('<div align="center"><div>')
-                                html.append('<iframe src="' + source_file + '" width="' + str(width) + \
-                                            '" height="' + str(height) + '" frameborder="0" scrolling="no"></iframe>')
-
-                                # html.append('</div></div>')
-                            except:
-                                pass
-
-                            # print(chart.style.html_file_output)
-                            # print(chart)
+                                    html.append('<iframe src="' + source_file + '" width="' + str(width) + \
+                                                '" height="' + str(height) + '" frameborder="0" scrolling="no"></iframe>')
+                                except:
+                                    pass
                         elif isinstance(object, pandas.DataFrame):
                             old_width = pandas.get_option('display.max_colwidth')
                             pandas.set_option('display.max_colwidth', None)

@@ -170,6 +170,8 @@ In chartpy/examples you will find several demos
 
 # Coding log
 
+* 28 Mar 2026
+  * Added more functionality for Plotly DIV output for Canvas
 * 16 May 2025
   * Removed cufflinks in install
 * 08 Mar 2025
